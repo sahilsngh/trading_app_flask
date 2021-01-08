@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,300,500,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Roboto+Condensed:400,700' rel='stylesheet' type='text/css'>
+    <meta charset=utf-8>
+    <title>Live order book</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            width: 610px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 30px;
+            color: #666;
+            margin: 0 0 20px 0;
+            text-align: center;
+        }
+        h3 {
+            font-size: 15px;
+            color: rgb(142, 11, 202);
+            margin: 0 0 20px 0;
+            /* text-align: center; */
+            position: absolute;
+            left: 50%;
+            bottom: 1px;
+        }
+
+        .column {
+            width: 300px;
+            display: inline-block;
+        }
+
+        .column h2 {
+            text-align: left;
+        }
+
+        .column:nth-child(3) h2 {
+            text-align: right;
+        }
+
+        .column:nth-child(3) div {
+            text-align: right;
+        }
+        .vl {
+            border-left: 4px solid rgb(9, 12, 9);
+            height: 400px;
+            position: absolute;
+            left: 50%;
+            margin-left: -3px;
+            top: 10;
+        }
+    </style>
+</head>
+
+<body>
+<h1>Test order book</h1>
+<div class="column">
+    <h2>Bids/Buys</h2>
+    <div id="bids_placeholder">waiting for orders...</div>
+</div>
+<div class="column">
+    <h2>Asks/Sells</h2>
+    <div id="asks_placeholder">waiting for orders...</div>
+</div>
+<!-- <div class="vl"></div> -->
+<div id='chart1' style = "position:fixed; left:50px; top:175px;"></div>
+<div id='chart2' style = "position:fixed; right:50px; top:175px;"></div>
+
+<h3> *This page is demo for demonstrating the order book.
+    'The APPL stocks are script self-generated amounts'. <br>
+    *Zoom in each chart for better view. (*Note: for demonstrating purpose only*) (**work require!**)</h3>
+
+<h3 style = "position:absolute; left:1%; bottom:15%;">Stock Buy and Sell (type)</h3>
+
+<form style = "position:absolute; left:1%; bottom:3%;">
+    <label for="buy">Buy/Sell amounts:</label><br>
+    <input type="text" id="buy" name="buy" value="e.g: $10"><br>
+    <label for="sell">Last name:</label><br>
+    <input type="text" id="sell" name="sell" value="e.g: 100 volume"><br>
+    <input type="submit" value="Submit">
+</form> 
+
+
+<form style = "position:absolute; left:15%; bottom:9%;">
+    <input type="radio" id="buy" name="type" value="Buy">
+    <label for="male">Buy</label><br>
+    <input type="radio" id="sell" name="type" value="Sell">
+    <label for="female">Sell</label><br>
+</form> 
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+
+
+<script>
+
+var bidsPlaceholder = document.getElementById("bids_placeholder"),
+    asksPlaceholder = document.getElementById("asks_placeholder");
+
+var dataset = {
+        "time": 000,
+        "buy": 000,
+        "buy_volume": 000,
+        "sell": 000,
+        "sell_volume": 000
+    };
+
+$(function(){
+    window.setInterval(function(){
+        loadnewdata()
+    }, 250)
+
+
+
+function loadnewdata(){
+    $.ajax({
+        url:"update_stocks",
+        type:"POST",
+        data: JSON.stringify (dataset),
+        dataType:"json",
+        success: function(data){
+            dataset = JSON.stringify(data);
+            // console.log(dataset);
+        }
+
+    });
+    jsonparsing(dataset);
+}
+});
+
+function jsonparsing(dataset){
+    var json = JSON.parse(dataset);
+    serializeData(json);
+    // console.log(typeof json); //it is already a object
+    // document.getElementById("bids_placeholder").innerHTML = json.time + "=> APPL " + json.buy_volume + "@" + json.buy + "$" ;
+    // document.getElementById("asks_placeholder").innerHTML = json.time + "=> APPL " + json.sell_volume + "@" + json.sell + "$" ;
+
+}
+
+function serializeData(json) {
+        getdata(json);
+        bidsPlaceholder.innerHTML = '';
+        asksPlaceholder.innerHTML = '';
+        for (i = 0; i < 1; i++) {
+            bidsPlaceholder.innerHTML = bidsPlaceholder.innerHTML + json.time + "=> APPL " + json.buy_volume + "@ " + "$" + json.buy;
+        }
+        for (i = 0; i < 1; i++) {
+            asksPlaceholder.innerHTML = asksPlaceholder.innerHTML + json.time + "=> APPL " + json.sell_volume + "@ " + "$" + json.sell;
+        }
+    }
+
+function getdata(json){
+        if (json){
+        var plotdata = {
+            buy_x: json.buy,
+            sell_x: json.sell,
+            buy_y: json.buy_volume,
+            sell_y: json.sell_volume,
+        };
+        // console.log(plotdata)
+        dummydata(plotdata);
+        return plotdata;
+    };
+
+}
+
+var temp_x = 0;
+var temp_y = 0;
+function dummydata(plotdata){
+    if (plotdata){
+        // console.log(plotdata.buy_x);
+        temp_x = plotdata.buy_x;
+        temp_y = plotdata.sell_x
+    };
+    x_axis(temp_x);
+    return temp_y;
+};
+
+var x = 0;
+function x_axis(temp_x){
+    if (temp_x){
+         x = temp_x;
+    };
+    console.log(x)
+    return x;
+
+};
+
+Plotly.plot('chart1',[{
+    y:[x_axis()],
+    type:'line'
+}]);
+
+var cnt1 = 0;
+
+setInterval(function(){
+
+    // var dict = getdata();
+
+    Plotly.extendTraces('chart1', { y:[[x_axis()]]}, [0]);
+    cnt1++;
+
+    if (cnt1 > 100){
+        Plotly.relayout('chart1',{
+            // xaxis:range= [cnt-100, cnt1]
+            xaxis: {
+                range: [cnt1-100, cnt1]
+            }
+        });
+    }
+    
+}, 15);
+
+var cnt2 = 0;
+
+Plotly.plot('chart2',[{
+    y:[dummydata()],
+    type:'line'
+}]);
+
+setInterval(function(){
+
+    Plotly.extendTraces('chart2', { y:[[dummydata()]]}, [0]);
+    cnt2++;
+
+    if (cnt2 > 100){
+        Plotly.relayout('chart2',{
+            xaxis: {
+                range: [cnt2-100, cnt2]
+            }
+        });
+    }
+    
+}, 15);
+
+
+</script>
+
+</body>
+</html>
