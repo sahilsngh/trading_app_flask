@@ -5,4 +5,4 @@ This app will run with just flask installed on your local system or you can depl
 the live demo is available at youtube - https://youtu.be/_h7T4V94O48. 
 In near future-
 1. Add live `stock-price-fetching` with API (live data/stocks)
-2. Deploy it on web servers
+2. Deploy it on `firebase` web servers
